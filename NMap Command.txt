@@ -1,0 +1,6 @@
+nmap <ip_address>
+nmap -sV <ip_address>
+nmap -O <ip_address>
+nmap –script <ip_address>
+nmap -A <ip_address>
+nmap --traceroute <ip_address> 
