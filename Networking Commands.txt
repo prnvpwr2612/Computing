@@ -1,0 +1,7 @@
+ping www.fotmob.com
+ipconfig /all
+tracert www.fotmob.com
+netstat -a
+nslookup www.fotmob.com
+arp -a
+hostname
