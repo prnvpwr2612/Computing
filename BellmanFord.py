@@ -1,46 +1,65 @@
+class Edge:
+    def __init__(self, source, destination, weight):
+        self.source = source
+        self.destination = destination
+        self.weight = weight
+
+
 class Graph:
-    def __init__(self, vertices):
+    def __init__(self, vertices, edges):
         self.V = vertices
-        self.graph = []
+        self.E = edges
+        self.edge = []
 
-    def add_edge(self, u, v, w):
-        self.graph.append([u, v, w])
+    def add_edge(self, source, destination, weight):
+        if source >= self.V or destination >= self.V:
+            print(f"Error: vertex out of range. Valid range is 0 to {self.V-1}.")
+            return
+        self.edge.append(Edge(source, destination, weight))
 
-    def bellman_ford(self, src):
-        # Step 1: Initialize distances from src to all other vertices as INFINITE
-        dist = [float("Inf")] * self.V
-        dist[src] = 0
 
-        # Step 2: Relax all edges |V| - 1 times
-        for _ in range(self.V - 1):
-            for u, v, w in self.graph:
-                if dist[u] != float("Inf") and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
+def bellman_ford(graph, source):
+    V = graph.V
+    E = len(graph.edge)
+    distance = [float('inf')] * V
+    distance[source] = 0
 
-        # Step 3: Check for negative-weight cycles
-        for u, v, w in self.graph:
-            if dist[u] != float("Inf") and dist[u] + w < dist[v]:
-                print("Graph contains negative weight cycle")
-                return
+    # Relax edges V-1 times
+    for _ in range(V - 1):
+        for edge in graph.edge:
+            u = edge.source
+            v = edge.destination
+            weight = edge.weight
+            if distance[u] != float('inf') and distance[u] + weight < distance[v]:
+                distance[v] = distance[u] + weight
 
-        # Print the distance array
-        self.print_solution(dist)
+    # Check for negative weight cycles
+    for edge in graph.edge:
+        u = edge.source
+        v = edge.destination
+        weight = edge.weight
+        if distance[u] != float('inf') and distance[u] + weight < distance[v]:
+            print("Graph contains negative weight cycle")
+            return
 
-    def print_solution(self, dist):
-        print("Vertex Distance from Source")
-        for i in range(self.V):
-            print(f"{i}\t\t{dist[i]}")
+    print("Vertex Distance from Source")
+    for i in range(V):
+        print(f"{i}\t\t{distance[i]}")
 
-# Example usage
-if __name__ == "__main__":
-    g = Graph(5)
-    g.add_edge(0, 1, -1)
-    g.add_edge(0, 2, 4)
-    g.add_edge(1, 2, 3)
-    g.add_edge(1, 3, 2)
-    g.add_edge(1, 4, 2)
-    g.add_edge(3, 2, 5)
-    g.add_edge(3, 1, 1)
-    g.add_edge(4, 3, -3)
 
-    g.bellman_ford(0)
+# Input section
+V = int(input("Enter number of vertices: "))
+E = int(input("Enter number of edges: "))
+
+graph = Graph(V, E)
+
+print("Enter source, destination, and weight for each edge:")
+for _ in range(E):
+    source, destination, weight = map(int, input().split())
+    graph.add_edge(source, destination, weight)
+
+source = int(input("Enter source vertex: "))
+if source < 0 or source >= V:
+    print(f"Invalid source vertex. Valid range is 0 to {V-1}.")
+else:
+    bellman_ford(graph, source)
