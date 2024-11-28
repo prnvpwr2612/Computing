@@ -1,57 +1,79 @@
 import random
 
-def is_prime(n, k=5):
-    if n < 2: return False
-    for p in [2,3,5,7,11,13,17,19,23,29]:
-        if n % p == 0: return n == p
-    s, d = 0, n-1
-    while d % 2 == 0:
-        s, d = s+1, d//2
-    for _ in range(k):
-        x = pow(random.randint(2, n-1), d, n)
-        if x == 1 or x == n-1: continue
-        for _ in range(s-1):
-            x = pow(x, 2, n)
-            if x == n-1: break
-        else: return False
-    return True
+def generate_prime():
+    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+    return random.choice(primes)
 
-def generate_prime(bits):
-    while True:
-        n = random.getrandbits(bits)
-        if is_prime(n): return n
-
-def find_primitive_root(p):
-    if p == 2: return 1
-    p1 = 2
-    p2 = (p-1) // p1
-    while True:
-        g = random.randint(2, p-1)
-        if not (pow(g, (p-1)//p1, p) == 1) and not (pow(g, (p-1)//p2, p) == 1):
+def generate_primitive_root(prime):
+    for g in range(2, prime):
+        if pow(g, prime - 1, prime) == 1:
             return g
+    return None
 
-def diffie_hellman():
-    p = generate_prime(64)
-    g = find_primitive_root(p)
-    
-    print(f"Publicly shared prime: {p}")
-    print(f"Publicly shared base: {g}")
-    
-    a_private = random.randint(1, p-1)
-    a_public = pow(g, a_private, p)
-    
-    b_private = random.randint(1, p-1)
-    b_public = pow(g, b_private, p)
-    
-    print(f"Alice's public key: {a_public}")
-    print(f"Bob's public key: {b_public}")
-    
-    a_shared_secret = pow(b_public, a_private, p)
-    b_shared_secret = pow(a_public, b_private, p)
-    
-    print(f"Alice's computed shared secret: {a_shared_secret}")
-    print(f"Bob's computed shared secret: {b_shared_secret}")
-    
-    assert a_shared_secret == b_shared_secret, "The shared secrets should be equal"
+def generate_private_key(prime):
+    return random.randint(2, prime - 2)
 
-diffie_hellman()
+def calculate_public_key(prime, g, private_key):
+    return pow(g, private_key, prime)
+
+def calculate_shared_secret(prime, public_key, private_key):
+    return pow(public_key, private_key, prime)
+
+def encrypt_message(message, shared_secret):
+    return ''.join([chr(ord(c) ^ shared_secret) for c in message])
+
+def decrypt_message(encrypted_message, shared_secret):
+    return ''.join([chr(ord(c) ^ shared_secret) for c in encrypted_message])
+
+p = generate_prime()
+g = generate_primitive_root(p)
+print("Shared Parameters:")
+print("Prime (p):", p)
+print("Primitive root (g):", g)
+
+jenish_private = generate_private_key(p)
+jenish_public = calculate_public_key(p, g, jenish_private)
+arnold_private = generate_private_key(p)
+arnold_public = calculate_public_key(p, g, arnold_private)
+
+print("\nJenish's keys:")
+print("Private key:", jenish_private)
+print("Public key:", jenish_public)
+
+print("\nArnold's keys:")
+print("Private key:", arnold_private)
+print("Public key:", arnold_public)
+
+jenish_shared_secret = calculate_shared_secret(p, arnold_public, jenish_private)
+arnold_shared_secret = calculate_shared_secret(p, jenish_public, arnold_private)
+
+print("\nShared Secrets:")
+print("Jenish's calculated shared secret:", jenish_shared_secret)
+print("Arnold's calculated shared secret:", arnold_shared_secret)
+
+if jenish_shared_secret == arnold_shared_secret:
+    print("\nKey exchange successful! Both parties have the same shared secret.")
+else:
+    print("\nKey exchange failed. The shared secrets do not match.")
+
+sender = "Jenish"
+receiver = "Arnold"
+original_message = "Hello Arnold, this is a secret message from Jenish!"
+print("\nScenario 1: (sender) sends a message to (receiver)")
+print("Original message:", original_message)
+encrypted_message = encrypt_message(original_message, jenish_shared_secret)
+print("Encrypted message:", encrypted_message)
+decrypted_message = decrypt_message(encrypted_message, arnold_shared_secret)
+print("Decrypted message:", decrypted_message)
+
+print("\n" + "-" * 50 + "\n")
+
+sender = "Arnold"
+receiver = "Jenish"
+original_message = "Hi Jenish, I received your message. Here's my reply!"
+print("Scenario 2: (sender) sends a message to (receiver)")
+print("Original message:", original_message)
+encrypted_message = encrypt_message(original_message, arnold_shared_secret)
+print("Encrypted message:", encrypted_message)
+decrypted_message = decrypt_message(encrypted_message, jenish_shared_secret)
+print("Decrypted message:", decrypted_message)
